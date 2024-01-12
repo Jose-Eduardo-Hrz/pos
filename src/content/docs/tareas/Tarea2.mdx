@@ -1,0 +1,89 @@
+---
+title : Tarea 2. Métodos REST
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Descriptión
+
+Servidor REST que permite utilizar un CRUD de Clientes ( Crear, Agregar, Actualizar y Eliminar )
+
+## Instrucciones de Instalación y Configuración
+
+Mediante una ventana de lineas de comando ejecutar la siguiente instrucción para instalar las dependencias del proyecto
+
+```sh title="Consola"
+npm install
+```
+
+:::caution[Importante]
+La instrucción debe ser ejecutada dentro del proyecto
+:::
+
+Crear la base de datos utilizando las siguientes instrucciones:
+
+```sql
+
+CREATE DATABASE IF NOT EXISTS ClienteDB;
+
+USE ClienteDB;
+
+CREATE TABLE Cliente(
+    id INT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(20) NOT NULL,
+    apellidos VARCHAR(30) NOT NULL,
+    direccion VARCHAR(50) NOT NULL,
+    correo VARCHAR(50) NOT NULL,
+    telefono VARCHAR(15) NOT NULL,
+    PRIMARY KEY (id)
+);
+```
+
+En el archivo main.js, agregar los datos necesarios para conectarse a la base de datos 
+
+```js "process.env.HOST" "process.env.PORT" "process.env.DATABASE" "process.env.USER" "process.env.PASSWORD "
+// src/main.js
+const pool = createPool({
+    host : process.env.HOST, // Dato de tipo String
+    port : process.env.PORT, // Dato de tipo Number
+    database : process.env.DATABASE, // Dato de tipo Number
+    user : process.env.USER, // Dato de tipo Number
+    password : process.env.PASSWORD // Dato de tipo Number
+})
+```
+
+:::tip[Sugerencia]
+Puedes utilizar variables de entono para mejorar la seguridad del servidor de la siguiente manera:
+
+<Tabs>
+  <TabItem label="Windows">
+    ```sh title="Consola"
+    set HOST localhost
+    ```
+  </TabItem>
+  <TabItem label="Linux">
+    ```sh title="Consola"
+    set HOST localhost
+    ```
+  </TabItem>
+</Tabs>
+
+:::
+
+Iniciar el servidor 
+
+<Tabs>
+  <TabItem label="Desarrollo">
+    ```sh title="Consola"
+    npm run dev
+    ```
+  </TabItem>
+  <TabItem label="Produccion">
+    ```sh title="Consola"
+    npm start
+    ```
+  </TabItem>
+</Tabs>
+
+## Desarrollo del Proyecto
+
