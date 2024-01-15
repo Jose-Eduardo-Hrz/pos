@@ -6,6 +6,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'POS',
+			tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 5 },
 			customCss: [
 				'./src/styles/custom.css',
 			  ],

@@ -4,11 +4,13 @@ title : Tarea 2. Métodos REST
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-## Descriptión
+## Descripción
 
 Servidor REST que permite utilizar un CRUD de Clientes ( Crear, Agregar, Actualizar y Eliminar )
 
 ## Instrucciones de Instalación y Configuración
+
+El proyecto puede ser descargado en [este link](/examenes/examen1/Examen1.rar)
 
 Mediante una ventana de lineas de comando ejecutar la siguiente instrucción para instalar las dependencias del proyecto
 
@@ -85,3 +87,390 @@ Iniciar el servidor
 </Tabs>
 
 ## Desarrollo del Proyecto
+
+Se crea una carpeta llamada `Tarea2` que almacenará los archivos del servidor:
+
+```sh title="Consola"
+mkdir Tarea2
+```
+
+Dentro de la carpeta `Tarea2` iniciar un proyecto de `NodeJS`:
+
+```sh title="Consola"
+cd Tarea2
+npm init --yes
+```
+
+Al realizar esto, se crea un archivo `package.json`, el cual, permite indicar informacion del proyecto como el nombre, scripts, dependencias, entre otros.
+
+Para utilizar codigo de `ECMAScript V6` se debe agregar lo siguiente en el archivo `package.json`, tambien, se agrega instrucciones para ejecutar el proyecto en desarrollo y producción:
+
+```diff lang="json"
+// package.json
+{
+  "name": "Tarea2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
++  "type": "module",
+  "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "dev" : "node src/main.js"
++    "start": "node src/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+```
+
+### Instalar dependencias
+
+Para este proyecto se utiliza los modulos `express` y `mysql2`, para agregarlos a proyecto es necesario descargar estos modulos con el siguinete comando:
+
+```sh title="Consola"
+npm install express mysql2
+```
+
+Al terminar la instalacion de las depencias, el archivo `package.json` deberia estar de la siguiente manera:
+
+```diff lang="json"
+// package.json
+{
+  "name": "Tarea2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev" : "node src/main.js",
+    "start": "node src/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
++    "express": "^4.18.2",
++    "mysql2": "^3.7.0"
+  }
+}
+```
+
+### Archivos de Servidor
+
+Dentro de la carpeta `Tarea2` se crear una carperta llamada `src` que almacenará los scripts con instrucciones para crear el servidor REST
+
+```sh title="Consola"
+mkdir src 
+```
+
+Dentro de la carpera `src` se crea un archivo llamado `main.js` el cual sera el script principal de nuestro servidor
+
+```sh title="Consola"
+touch src/main.js
+```
+
+En este archivo `main.js` se debe importar el modulo `express` que permite crear un servidor
+
+```js 
+// src/main.js
+import express from 'express'
+```
+
+En el siguiente código, se almacena en `app` el resultado de `express()`, se agrega los puntos finales para crear un CRUD y se inicializa el servidor:
+
+```js 
+// src/main.js
+import express from 'express'
+
+const app = express()
+
+app.post( '/Cliente' , async ( req , res ) => {
+  // Instrucciones para agregar clientes ...
+})
+
+app.delete( '/Cliente' , async ( req , res ) => {
+  // Instrucciones para eliminar un cliente ...
+})
+
+app.get( '/Cliente' , async ( req , res ) => {
+  // Instrucciones para listar todos los clientes ...
+})
+
+app.get( '/Cliente/:id' , async ( req , res ) => {
+  // Instrucciones para mostrar un cliente por su id ...
+})
+
+app.put( '/Cliente' , async ( req , res ) => {
+  // Instrucciones para atualizar un cliente ...
+})
+
+// Instrucción para inicializar el servidor
+app.listen( 8081 , () => console.log( "Servidor corriendo en el puerto 8081" ) )
+```
+
+### Conexion con Base de Datos
+
+En el archivo `src/main.js` se debe importar el modulo `mysql2` que permite conexion con la base de datos `mysql`
+
+```diff lang="js"
+// src/main.js
+import express from 'express'
++import { createPool } from 'mysql2/promise'
+
+// Resto del codigo ....
+```
+
+:::note[Nota]
+Se utiliza el archivo `promise` para convertir a función `async/await`, esto permite reducir las instrucciones al utilizar funciones de `mysql2`
+
+Sin utilizar `mysql2/promise` una llamada a funcion se veria de la siguiente forma:
+
+```js 
+const conn = // Conexion a la base de datos
+
+async function getData() {
+    return await new Promise( ( resolver ) => {
+        conn.getConnection( ( error , conexion ) => {
+            if( error ) return resolver( [] )
+            conexion.query( "SELECT * from libros" , [] , ( error , resultado , fields ) => {
+                if( error ) return resolver( [] )
+                return resolver( resultado )
+            })
+        })
+    })
+}
+```
+
+Utilizando `mysql2/promise` una llamada a funcion se veria de la siguiente forma:
+
+```js 
+const conn = // Conexion a la base de datos
+
+async function getData() {
+    try {
+        return (await (await conn.getConnection()).query( "SELECT * from libros" ))[0]
+    } catch (error) {
+        return []
+    }
+}
+```
+:::
+
+Del modulo `mysql2/promise` se extrae `createPool`, el cual, permite tener un `pool` de conexiones, en otras palabras, permite tener un grupo de conexiones, se invoca a `createPool` agregando informacion para la conexion a la base de datos y se almacena en la constante `pool`
+
+```js 
+import express from 'express'
+import { createPool } from 'mysql2/promise'
+
+const pool = createPool({
+    host : process.env.HOST,
+    database : process.env.DATABASE ,
+    user : process.env.USER,
+    password : process.env.PASSWORD,
+    port : Number(process.env.PORT)
+})
+
+// Resto del codigo ....
+```
+
+:::tip[Sugerencia]
+Se recomienda utilizar `createPool` en lugar de `createConnection`, ya que, `createPool` al ser un grupo de conexiones, cuando una conexion este siendo utilizada, otra conexion podra conectarse a la base de datos simultaneamentey realizando varias consultas a la vez, mientras que `createPool` cuando este siendo utilizada, solo podra realizar una consulta a la vez generando colas de espera.
+:::
+
+Para verificar la conexion con la base de datos se puede utilizar una funcion llamada ping(), ejemplo:
+
+```js {13-19,21}
+// src/main.js
+import express from 'express'
+import { createPool } from 'mysql2/promise'
+
+const pool = createPool({
+    host : process.env.HOST,
+    database : process.env.DATABASE ,
+    user : process.env.USER,
+    password : process.env.PASSWORD,
+    port : Number(process.env.PORT)
+})
+
+async function test(){
+    try {
+        console.log( await (await pool.getConnection()).ping() );
+    } catch (error) {
+        console.log( error );
+    }
+}
+
+test()
+
+// Resto del codigo ....
+```
+
+Al ejecutar el proyecto en modo de desarrollo `npm run dev` se debe mostrar los mensajes:
+
+```sh title="Consola"
+Servidor corriendo en el puerto 8081
+true
+```
+
+El mensaje `true` indica que la conexion a la base de datos fue exitosa
+
+:::note[Nota]
+El código agregado anteriormente no es relevante para los siguinetes pasos, solo se utiliza para verificar la conexion a la base de datos. 
+:::
+
+### Habitar solicitudes
+
+Cuando un cliente requiera información, los tipos de datos que puede mandar son JSON, URLEncoded, texto plano, entre otros, para poder transformar una cadena de bits en datos que puede utilizar el servidor en la solicitud se debe utilizar un middleware.
+
+#### Solicitudes en formato JSON 
+
+```js 
+// Importacion del modulo express
+import express from 'express'
+// Se almacena las funciones de express en app
+const app = express()
+// Del modulo express se obtiene el middleware que permite convertir 
+// solicitudes entrantes en formato JSON
+// y se inidca que se usará en el servidor
+app.use( express.json() )
+
+// Resto del codigo ...
+```
+
+#### Solicitudes en formato URLEncoded 
+
+```js 
+// Importacion del modulo express
+import express from 'express'
+// Se almacena las funciones de express en app
+const app = express()
+// Del modulo express se obtiene el middleware que permite convertir 
+// solicitudes entrantes en formato URLEncoded
+// y se inidca que se usará en el servidor
+app.use( express.urlencoded({ extended : false }) )
+
+// Resto del codigo ...
+```
+
+### Agregar Clientes 
+
+Para agregar un cliente se debe obtener los datos del cliente, como la solicitud es con el metodo `POST` estos datos no pueden ser obtenidos de la URL, entonces, se obtienen del cuerpo de la solicitud, despues, se `solicita una conexion del pool` de conexiones y se utiliza la instruccion `INSERT` para insertar un cliente, despues, se obtiene todos los clientes de la base de datos y se envia al cliente, por ultimo, se libera la conexion solicita del pool de conexiones
+
+```js "{ nombre , apellidos , direccion , correo , telefono }" "pool.getConnection()" ""INSERT INTO Cliente VALUES ( 0 , ? , ? , ? , ? , ? )"" ""SELECT * FROM Cliente"" "res.json( clientes[0] )" "conexion.release()"
+// src/main.js
+app.post( '/Cliente' , async ( req , res ) => {
+    const { nombre , apellidos , direccion , correo , telefono } = req.body
+    let conexion = null
+    try {
+        conexion = await pool.getConnection()
+        await conexion.query( 
+          "INSERT INTO Cliente VALUES ( 0 , ? , ? , ? , ? , ? )" , 
+          [ nombre , apellidos , direccion , correo , telefono ] 
+        )
+        const clientes = await conexion.query( "SELECT * FROM Cliente" )
+        res.json( clientes[0] )
+    } catch (error) {
+        res.status(500).json( { error : "Error al agregar un cliente" } )
+    } finally {
+        if( conexion ) conexion.release()
+    }
+}) 
+```
+
+:::tip[Sugerencia]
+Puedes pobrar este punto final mediante un Clientes REST:
+- [thunderclient](https://www.thunderclient.com/)
+- [insomnia](https://insomnia.rest/download)
+- [postman](https://www.postman.com/)
+:::
+
+### Eliminar Cliente 
+
+Para eliminar un cliente es necesario obtener el id del cliente, como la solicitud es con el metodo `DELETE` estos datos no pueden ser obtenidos de la URL, entonces, se obtienen del cuerpo de la solicitud, despues, se `solicita una conexion del pool` de conexiones y se utiliza la instruccion `DELETE` para eliminar un cliente, despues, se obtienen todos los clientes de la base de datos y se envia al cliente, por ultimo, se libera la conexion solicita del pool de conexiones
+
+```js "req.body.id" "pool.getConnection()" ""DELETE FROM Cliente WHERE id = ?"" ""SELECT * FROM Cliente"" "res.json( clientes[0] )" "conexion.release()"
+// src/main.js
+app.delete( '/Cliente' , async ( req , res ) => {
+    const id = req.body.id
+    let conexion = null
+    try {
+        conexion = await pool.getConnection()
+        await conexion.query( "DELETE FROM Cliente WHERE id = ?" , [ id ] )
+        const clientes = await conexion.query( "SELECT * FROM Cliente" )
+        res.json( clientes[0] )
+    } catch (error) {
+        res.status(500).json( error )
+    } finally {
+        if( conexion ) conexion.release()
+    }
+})
+```
+
+### Obtener todos los Clientes 
+
+Para obtener todos los clientes se `solicita una conexion del pool` de conexiones y se utiliza la instruccion `SELECT` para obtener todos los clientes, despues, se envia al cliente, por ultimo, se libera la conexion solicitada del pool de conexiones
+
+```js "pool.getConnection()" ""SELECT * FROM Cliente"" "res.json( resultado[0] )" "conexion.release()"
+// src/main.js
+app.get( '/Cliente' , async ( req , res ) => {
+    let conexion = null
+    try {
+        conexion = await pool.getConnection()
+        const resultado = await conexion.query( "SELECT * FROM Cliente" )
+        res.json( resultado[0] )
+    } catch (error) {
+        res.status(500).json( { error : "Error al obtener todos los clientes" } )
+    } finally {
+        if( conexion ) conexion.release()
+    }
+})
+``` 
+
+### Obtener un Cliente por su Id 
+
+Para obtener un cliente es necesario obtener el id del cliente, como la solicitud es con el metodo `GET` estos datos pueden ser obtenidos de la URL como parametros, se `solicita una conexion del pool` de conexiones y se utiliza la instruccion `SELECT` para obtener un cliente, por ultimo, se libera la conexion solicita del pool de conexiones
+
+```js "req.params.id" "pool.getConnection()" ""SELECT * FROM Cliente WHERE id = ?"" "res.json( resultado[0] )" "conexion.release()"
+// src/main.js
+app.get( '/Cliente/:id' , async ( req , res ) => {
+    const id = req.params.id
+    let conexion = null
+    try {
+        conexion = await pool.getConnection()
+        const resultado = await conexion.query( 
+          "SELECT * FROM Cliente WHERE id = ?" , [ id ] 
+        )
+        res.json( resultado[0] )
+    } catch (error) {
+        res.status(500).json( { error : "Error al obtener un cliente" } )
+    } finally {
+        if( conexion ) conexion.release()
+    }
+})
+```
+
+### Actualizar datos del cliente
+
+Para actualizar un cliente se debe obtener los datos del cliente, como la solicitud es con el metodo `PUT` estos datos no pueden ser obtenidos de la URL, entonces, se obtienen del cuerpo de la solicitud, despues, se `solicita una conexion del pool` de conexiones y se utiliza la instruccion `UPDATE` para actualizar un cliente, despues, se obtiene todos los clientes de la base de datos y se envia al cliente, por ultimo, se libera la conexion solicita del pool de conexiones
+
+```js "{ id , nombre , apellidos , direccion , correo , telefono }" "pool.getConnection()" ""UPDATE Cliente SET nombre = ?, apellidos = ? , direccion = ?, correo = ?, telefono = ? WHERE id = ?"" ""SELECT * FROM Cliente"" "res.json( clientes[0] )" "conexion.release()"
+app.put( '/Cliente' , async ( req , res ) => {
+    const { id , nombre , apellidos , direccion , correo , telefono } = req.body
+    let conexion = null
+    try {
+        conexion = await pool.getConnection()
+        let result = await conexion.query( 
+          "UPDATE Cliente SET nombre = ?, apellidos = ? , direccion = ?, correo = ?, telefono = ? WHERE id = ?", 
+          [  nombre , apellidos , direccion , correo , telefono, id ] 
+        )
+        const clientes = await conexion.query( "SELECT * FROM Cliente" )
+        res.json( clientes[0] )
+    } catch (error) {
+        res.status(500).json( { error : "Error al actualizar un cliente" } )
+    } finally {
+        if( conexion ) conexion.release()
+    }
+})
+```
+
