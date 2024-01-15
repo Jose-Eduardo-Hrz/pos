@@ -14,6 +14,10 @@ export default defineConfig({
 					label: 'Tareas',
 					autogenerate: { directory: 'tareas' },
 				},
+				{
+					label: 'Examenes',
+					autogenerate: { directory: 'examenes' },
+				},
 			],
 		}),
 	],

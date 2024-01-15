@@ -1,0 +1,427 @@
+---
+title : Examen 1
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+## Descripción 
+
+Desarrolla la siguiente API utilizando el lenguaje de programación de JavaScript, NodeJs, y el manejador de bases de datos MySQL o MariaDB.
+
+1. Deberás utilizar los siguientes módulos:
+    - `express` para el desarrollo de aplicaciones Web
+    - `mysql` o `mysql2` para el acceso a la base de datos
+2. Crea una base de datos llamada `Librería` y una tabla llamada `libros` con los atributos que se muestran en la tabla
+
+| isbn | Titulo | Nombre Autor | Apellido Autor | Precio |
+|------|:-------|:-------------|:---------------|:-------|
+9780062511409 | El Alquimista | Paulo | Coelho | $239.50 |
+9789504928362 | El lado B del amor | Gabriel | Rolón | $459.00 |
+9788408109907 | Enamórate de ti: el valor imprescindible de la autoestima | Walter | Riso | $378.00 |
+
+3. Desarrollar una API-libros.js con las siguientes interfaces:
+
+Método | Path | Descripción|
+|------|:-----|:-----------|
+GET | /listaLibros | Este método debe regresar toda la lista de libros con todos sus atributos
+GET | /listaLibros/:isbn | Este método debe regresar los detalles del libro cuyo isbn coincide
+POST | /agregaLibro | Este método debe leer losdatos de un libro desde un formulario y crear un nuevo libro en la base
+DELETE | /eliminaLibro | Este método debe ejecutarse mediante un cliente js que pida el isbn del libro y que se elimine ese libro de la base de datos
+
+## Instrucciones de Instalación y Configuración
+
+Mediante una ventana de lineas de comando ejecutar la siguiente instrucción para instalar las dependencias del proyecto
+
+```sh title="Consola"
+npm install
+```
+
+:::caution[Importante]
+La instrucción debe ser ejecutada dentro del proyecto
+:::
+
+Crear la base de datos utilizando las siguientes instrucciones:
+
+```sql
+CREATE DATABASE IF NOT EXISTS Libreria;
+
+USE Libreria;
+
+CREATE TABLE Libros(
+    isbn INT NOT NULL,
+    titulo VARCHAR(20) NOT NULL,
+    nombre_autor VARCHAR(30) NOT NULL,
+    apellido_autor VARCHAR(50) NOT NULL,
+    precio FLOAT(4) NOT NULL,
+    PRIMARY KEY (isbn)
+);
+```
+
+En el archivo main.js, agregar los datos necesarios para conectarse a la base de datos
+
+
+```js "process.env.HOST" "process.env.PORT" "process.env.DATABASE" "process.env.USER" "process.env.PASSWORD "
+// src/main.js
+const pool = createPool({
+    host : process.env.HOST, // Dato de tipo String
+    port : process.env.PORT, // Dato de tipo Number
+    database : process.env.DATABASE, // Dato de tipo Number
+    user : process.env.USER, // Dato de tipo Number
+    password : process.env.PASSWORD // Dato de tipo Number
+})
+```
+
+:::tip[Sugerencia]
+Puedes utilizar variables de entono para mejorar la seguridad del servidor de la siguiente manera:
+
+<Tabs>
+  <TabItem label="Windows">
+    ```sh title="Consola"
+    set HOST localhost
+    ```
+  </TabItem>
+  <TabItem label="Linux">
+    ```sh title="Consola"
+    set HOST localhost
+    ```
+  </TabItem>
+</Tabs>
+:::
+
+Iniciar el servidor 
+
+<Tabs>
+  <TabItem label="Desarrollo">
+    ```sh title="Consola"
+    npm run dev
+    ```
+  </TabItem>
+  <TabItem label="Produccion">
+    ```sh title="Consola"
+    npm start
+    ```
+  </TabItem>
+</Tabs>
+
+## Desarrollo del Proyecto
+
+### Primeros pasos
+
+Se crea una carpeta llamada `Examen2` que almacenará los archivos del servidor:
+
+```sh title="Consola"
+mkdir Examen2
+```
+
+Dentro de la carpeta `Examen2` iniciar un proyecto de `NodeJS`:
+
+```sh title="Consola"
+cd Examen2
+npm init --yes
+```
+
+Al realizar esto, se crea un archivo `package.json`, el cual, permite indicar informacion del proyecto como el nombre, scripts, dependencias, entre otros.
+
+Para utilizar codigo de `ECMAScript V6` se debe agregar lo siguiente en el archivo `package.json`, tambien, se agrega instrucciones para ejecutar el proyecto en desarrollo y producción:
+
+```diff lang="json"
+// package.json
+{
+  "name": "examen2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
++  "type": "module",
+  "scripts": {
+-    "test": "echo \"Error: no test specified\" && exit 1"
++    "dev" : "node src/main.js"
++    "start": "node src/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+```
+
+### Instalar dependencias
+
+Para este proyecto se utiliza los modulos `express` y `mysql2`, para agregarlos a proyecto es necesario descargar estos modulos con el siguinete comando:
+
+```sh title="Consola"
+npm install express mysql2
+```
+
+Al terminar la instalacion de las depencias, el archivo `package.json` deberia estar de la siguiente manera:
+
+```diff lang="json"
+// package.json
+{
+  "name": "examen2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev" : "node src/main.js",
+    "start": "node src/main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
++    "express": "^4.18.2",
++    "mysql2": "^3.7.0"
+  }
+}
+```
+
+### Archivos de Servidor
+
+Dentro de la carpeta `Examen2` se crear una carperta llamada `src` que almacenará los scripts con instrucciones para crear el servidor REST
+
+```sh title="Consola"
+mkdir src 
+```
+
+Dentro de la carpera `src` se crea un archivo llamado `main.js` el cual sera el script principal de nuestro servidor
+
+```sh title="Consola"
+touch src/main.js
+```
+
+En este archivo `main.js` se debe importar el modulo `express` que permite crear un servidor
+
+```js 
+// src/main.js
+import express from 'express'
+```
+
+En el siguiente código, se almacena en `app` el resultado de `express()`, se agrega los puntos finales para crear un CRUD y se inicializa el servidor:
+
+```js 
+// src/main.js
+import express from 'express'
+
+const app = express()
+
+app.get( '/listaLibros' , (req,res) => {
+    // Instrucciones para mostrar la lista de libros
+})
+
+app.get( '/listaLibros/:isbn' , (req,res) => {
+    // Instrucciones para mostrar solo un libro por su isbn
+})
+
+app.post( '/agregaLibro' , (req,res) => {
+    // Instrucciones para agregar un libro
+})
+
+app.delete( '/eliminaLibro' , (req,res) => {
+    // Instrucciones para eliminar un libro
+})
+
+// Instrucción para inicializar el servidor
+app.listen( 8081 , () => console.log( "Servidor corriendo en el puerto 8081" ) )
+```
+
+### Conexion con Base de Datos
+
+En el archivo `src/main.js` se debe importar el modulo `mysql2` que permite conexion con la base de datos `mysql`
+
+```diff lang="js"
+// src/main.js
+import express from 'express'
++import { createPool } from 'mysql2/promise'
+
+// Resto del codigo ....
+```
+
+:::note[Nota]
+Se utiliza el archivo `promise` para convertir a función `async/await`, esto permite reducir las instrucciones al utilizar funciones de `mysql2`
+
+Sin utilizar `mysql2/promise` una llamada a funcion se veria de la siguiente forma:
+
+```js 
+const conn = // Conexion a la base de datos
+
+async function getData() {
+    return await new Promise( ( resolver ) => {
+        conn.getConnection( ( error , conexion ) => {
+            if( error ) return resolver( [] )
+            conexion.query( "SELECT * from libros" , [] , ( error , resultado , fields ) => {
+                if( error ) return resolver( [] )
+                return resolver( resultado )
+            })
+        })
+    })
+}
+```
+
+Utilizando `mysql2/promise` una llamada a funcion se veria de la siguiente forma:
+
+```js 
+const conn = // Conexion a la base de datos
+
+async function getData() {
+    try {
+        return (await (await conn.getConnection()).query( "SELECT * from libros" ))[0]
+    } catch (error) {
+        return []
+    }
+}
+```
+:::
+
+Del modulo `mysql2/promise` se extrae `createPool`, el cual, permite tener un `pool` de conexiones, en otras palabras, permite tener un grupo de conexiones, se invoca a `createPool` agregando informacion para la conexion a la base de datos y se almacena en la constante `pool`
+
+```js 
+import express from 'express'
+import { createPool } from 'mysql2/promise'
+
+const pool = createPool({
+    host : process.env.HOST,
+    database : process.env.DATABASE ,
+    user : process.env.USER,
+    password : process.env.PASSWORD,
+    port : Number(process.env.PORT)
+})
+
+// Resto del codigo ....
+```
+
+:::tip[Sugerencia]
+Se recomienda utilizar `createPool` en lugar de `createConnection`, ya que, `createPool` al ser un grupo de conexiones, cuando una conexion este siendo utilizada, otra conexion podra conectarse a la base de datos simultaneamentey realizando varias consultas a la vez, mientras que `createPool` cuando este siendo utilizada, solo podra realizar una consulta a la vez generando colas de espera.
+:::
+
+Para verificar la conexion con la base de datos se puede utilizar una funcion llamada ping(), ejemplo:
+
+```js {13-19,21}
+// src/main.js
+import express from 'express'
+import { createPool } from 'mysql2/promise'
+
+const pool = createPool({
+    host : process.env.HOST,
+    database : process.env.DATABASE ,
+    user : process.env.USER,
+    password : process.env.PASSWORD,
+    port : Number(process.env.PORT)
+})
+
+async function test(){
+    try {
+        console.log( await (await pool.getConnection()).ping() );
+    } catch (error) {
+        console.log( error );
+    }
+}
+
+test()
+
+// Resto del codigo ....
+```
+
+Al ejecutar el proyecto en modo de desarrollo `npm run dev` se debe mostrar los mensajes:
+
+```sh title="Consola"
+Servidor corriendo en el puerto 8081
+true
+```
+
+El mensaje `true` indica que la conexion a la base de datos fue exitosa
+
+:::note[Nota]
+El código agregado anteriormente no es relevante para los siguinetes pasos, solo se utiliza para verificar la conexion a la base de datos. 
+:::
+
+### Listar todos los libros 
+
+Para obtener todos los libros almacenados en la base de datos, se debe solicitar una conexion del pool de conexiones, esta conexion se almacena en una constante llamada `conn`, con esta conexión, se realiza una consula sql y el resultado se almacena en la constante `result`, al finalizar la consulta, se libera la conexion solicitada y envia los datos en formato `JSON`
+
+```js "pool.getConnection()" "conn.query( "SELECT * FROM libros" )" "conn.release()" "res.json( result[0] )"
+// src/main.js
+app.get( '/listaLibros' , async (req,res) => {
+    try {
+        // Solicitud para una conexion al pool
+        const conn = await pool.getConnection()
+        // Consulta a la base de datos
+        const result = await conn.query( "SELECT * FROM libros" )
+        // Liberar conexion solicitada
+        conn.release()
+        // Se envia el resultado en formato JSON
+        res.json( result[0] )
+    } catch (error) {
+        res.json( [] )
+    }
+})
+```
+
+:::tip[Sugerencia]
+Puedes pobrar este punto final mediante consola 
+```sh title="Consola"
+curl http://localhost:8081/listaLibros
+```
+
+Ingresando la direccion `http://localhost:8081/listaLibros` en tu navegador preferido
+
+O bien, utilizar un Clientes REST:
+- [thunderclient](https://www.thunderclient.com/)
+- [insomnia](https://insomnia.rest/download)
+- [postman](https://www.postman.com/)
+:::
+
+### Obtener un libro
+
+```js
+// src/main.js
+app.get( '/listaLibros/:isbn' , async (req,res) => {
+    const isbn = req.params.isbn
+    try {
+        const conn = await pool.getConnection()
+        const result = await conn
+                        .query( "SELECT * FROM libros WHERE isbn=?" , [isbn] )
+        conn.release()
+        res.json( result[0] )
+    } catch (error) {
+        res.json( [] )
+    }
+})
+```
+### Agregar un libro 
+
+```js
+// src/main.js
+app.post( '/agregaLibro' , async (req,res) => {
+    const { isbn , titulo , nombre_autor , apellido_autor , precio } = req.body
+    try {
+        const conn = await pool.getConnection()
+        await conn.query( 
+            "INSERT INTO libros VALUES ( ? , ? , ? , ? , ? )", 
+            [ isbn, titulo ,nombre_autor ,apellido_autor ,precio ] 
+        )
+        const result = await conn.query( "SELECT * FROM libros" )
+        conn.release()
+        res.json( result[0] )
+    } catch (error) {
+        res.json( [] )
+    }
+})
+```
+
+### Eliminar un libro 
+
+```js
+// src/main.js
+app.delete( '/eliminaLibro' , async (req,res) => {
+    const isbn = req.body.isbn
+    try {
+        const conn = await pool.getConnection()
+        await conn.query( "DELETE FROM libros WHERE isbn = ?" , [ isbn ] )
+        const result = await conn.query( "SELECT * FROM libros" )
+        conn.release()
+        res.json( result[0] )
+    } catch (error) {
+        res.json( [] )
+    }
+})
+```
