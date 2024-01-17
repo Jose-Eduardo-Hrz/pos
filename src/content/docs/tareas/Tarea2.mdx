@@ -474,3 +474,56 @@ app.put( '/Cliente' , async ( req , res ) => {
 })
 ```
 
+### Servidor Archivos Estaticos
+
+Para servir archivos estaticos se requiere indicar la ruta de acceso a los archivos publicos
+
+```js 
+// Importacion del modulo express
+import express from 'express'
+// Importacion del modulo path
+import path from 'path'
+// Se almacena las funciones de express en app
+const app = express()
+// Del modulo express se obtiene el middleware que permite indicar
+// los archivos estaticos
+app.use( express.static( path.join( process.cwd() , 'public' ) ) )
+
+// Resto del codigo ...
+```
+
+:::note[Nota]
+El modulo `path` proporciona utilidades para trabajar con rutas de archivos y directorios, para este ejemplo se utiliza el metodo `join`, el cual, permite agregar los delimitadores y normaliza la ruta resultante, ya que, en cada sistema operativo el separador es diferente
+:::
+
+Se debe crear la carpeta `public` dentro de la carpeta del proyecto, en este caso `Tarea2 `
+
+```sh title="Consola"
+mkdir public
+```
+
+Dentro de esta carpeta, se agregan los archivos estaticos que seran publicos para los clientes, en este caso se crea un archivo `index.html`
+
+```sh title="Consola"
+cd public 
+touch public/index.html
+```
+
+Y se agrega el siguiente codigo `HTML` con rutas a otras páginas
+
+```html 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <a href="/Cliente">Mostrar Todos los clientes</a>
+    <a href="/agregar.html">Agregar un cliente</a>
+    <a href="/eliminar.html">Eliminar un cliente</a>
+    <a href="/actualizar">Actualizar un cliente</a>
+</body>
+</html>
+```
